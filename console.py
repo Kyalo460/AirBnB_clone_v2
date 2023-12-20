@@ -2,6 +2,7 @@
 """ Console Module """
 import cmd
 import sys
+import os
 from models.base_model import BaseModel
 from models.__init__ import storage
 from models.user import User
@@ -11,6 +12,8 @@ from models.city import City
 from models.amenity import Amenity
 from models.review import Review
 
+
+HBNB_TYPE_STORAGE = os.environ.get('HBNB_TYPE_STORAGE')
 
 class HBNBCommand(cmd.Cmd):
     """ Contains the functionality for the HBNB console"""
@@ -27,7 +30,13 @@ class HBNBCommand(cmd.Cmd):
     types = {
              'number_rooms': int, 'number_bathrooms': int,
              'max_guest': int, 'price_by_night': int,
-             'latitude': float, 'longitude': float
+             'latitude': float, 'longitude': float,
+             'city_id': str, 'user_id': str,
+             'name': str, 'description': str,
+             'amenities_ids': list, 'text': str,
+             'place_id': str, 'state_id': str,
+             'email': str, 'password': str,
+             'first_name': str, 'lats_name': str
             }
 
     def preloop(self):
@@ -73,7 +82,7 @@ class HBNBCommand(cmd.Cmd):
                 pline = pline[2].strip()  # pline is now str
                 if pline:
                     # check for *args or **kwargs
-                    if pline[0] is '{' and pline[-1] is'}'\
+                    if pline[0] == '{' and pline[-1] == '}'\
                             and type(eval(pline)) is dict:
                         _args = pline
                     else:
@@ -113,17 +122,32 @@ class HBNBCommand(cmd.Cmd):
         """ Overrides the emptyline method of CMD """
         pass
 
-    def do_create(self, args):
+    def do_create(self, args, **kwargs):
         """ Create an object of any class"""
         if not args:
             print("** class name missing **")
             return
-        elif args not in HBNBCommand.classes:
+
+        command = args.split(" ")
+        if command[0] not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        new_instance = HBNBCommand.classes[args]()
-        storage.save()
-        print(new_instance.id)
+        
+        new_instance = HBNBCommand.classes[command[0]]()
+        if len(command) > 1:
+            kwargs = {}
+            for arg in command:
+                parts = arg.split('=')
+                if len(parts) == 2:
+                    if parts[0] not in HBNBCommand.types:
+                        return
+                    key = parts[0]
+                    value = HBNBCommand.types[parts[0]](parts[1].strip('\"').replace("_", " "))
+                    kwargs[key] = value
+            new_instance.__dict__.update(kwargs)
+
+        storage.new(new_instance)
+        print(new_instance.name)
         storage.save()
 
     def help_create(self):
@@ -206,14 +230,39 @@ class HBNBCommand(cmd.Cmd):
             if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            for k, v in storage._FileStorage__objects.items():
-                if k.split('.')[0] == args:
-                    print_list.append(str(v))
+            if HBNB_TYPE_STORAGE == 'db':
+                dictionary = storage.all(HBNBCommand.classes[args])
+            else:
+                dictionary = storage.all(args)
         else:
-            for k, v in storage._FileStorage__objects.items():
-                print_list.append(str(v))
+            if HBNB_TYPE_STORAGE == 'db':
+                print("Code for this case")
+            else:
+                dictionary = storage._FileStorage__objects
 
-        print(print_list)
+        print("[", end="")
+        if HBNB_TYPE_STORAGE == 'db':
+            values = dictionary
+        else:
+            values = dictionary.values()
+
+        length = len(values)
+        i = 1
+                
+        for value in values:
+            cls_name = f"[{value.__class__.__name__}]"
+            obj_id = f"({value.id})"
+            obj_dict = value.to_dict()
+            del obj_dict['__class__']
+            obj_dict = str(obj_dict)
+            combo_list = [cls_name, obj_id, obj_dict]
+            combo = " ".join(combo_list)
+            if i != length:
+                print(combo, end=", ")
+            else:
+                print(combo, end="")
+            i += 1
+        print("]")
 
     def help_all(self):
         """ Help information for the all command """
@@ -272,7 +321,7 @@ class HBNBCommand(cmd.Cmd):
                 args.append(v)
         else:  # isolate args
             args = args[2]
-            if args and args[0] is '\"':  # check for quoted arg
+            if args and args[0] == '\"':  # check for quoted arg
                 second_quote = args.find('\"', 1)
                 att_name = args[1:second_quote]
                 args = args[second_quote + 1:]
@@ -280,10 +329,10 @@ class HBNBCommand(cmd.Cmd):
             args = args.partition(' ')
 
             # if att_name was not quoted arg
-            if not att_name and args[0] is not ' ':
+            if not att_name and args[0] != ' ':
                 att_name = args[0]
             # check for quoted val arg
-            if args[2] and args[2][0] is '\"':
+            if args[2] and args[2][0] == '\"':
                 att_val = args[2][1:args[2].find('\"', 1)]
 
             # if att_val was not quoted arg

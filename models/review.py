@@ -3,8 +3,9 @@
 from models.base_model import BaseModel
 
 
-class Review(BaseModel):
+class Review():
     """ Review classto store review information """
+    __tablename__ = 'review'
     place_id = ""
     user_id = ""
     text = ""

@@ -36,7 +36,7 @@ class HBNBCommand(cmd.Cmd):
              'amenities_ids': list, 'text': str,
              'place_id': str, 'state_id': str,
              'email': str, 'password': str,
-             'first_name': str, 'lats_name': str
+             'first_name': str, 'last_name': str
             }
 
     def preloop(self):
@@ -132,11 +132,15 @@ class HBNBCommand(cmd.Cmd):
         if command[0] not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        
+
         new_instance = HBNBCommand.classes[command[0]]()
         if len(command) > 1:
             kwargs = {}
+            i = 1
             for arg in command:
+                if i == len(command):
+                    break
+                i += 0
                 parts = arg.split('=')
                 if len(parts) == 2:
                     if parts[0] not in HBNBCommand.types:
@@ -147,7 +151,7 @@ class HBNBCommand(cmd.Cmd):
             new_instance.__dict__.update(kwargs)
 
         storage.new(new_instance)
-        print(new_instance.name)
+        print(new_instance.id)
         storage.save()
 
     def help_create(self):

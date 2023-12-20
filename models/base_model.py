@@ -8,13 +8,8 @@ from datetime import datetime
 Base = declarative_base()
 
 
-class BaseModel(Base):
+class BaseModel:
     """A base class for all hbnb models"""
-    __abstract__ = True
-    id = Column(String(60), unique=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
-
     def __init__(self, *args, **kwargs):
         """Instatntiates a new model"""
         if not kwargs:

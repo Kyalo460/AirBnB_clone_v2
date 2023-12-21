@@ -144,7 +144,7 @@ class HBNBCommand(cmd.Cmd):
                 parts = arg.split('=')
                 if len(parts) == 2:
                     if parts[0] not in HBNBCommand.types:
-                        return
+                        continue
                     key = parts[0]
                     value = HBNBCommand.types[parts[0]](parts[1].strip('\"').replace("_", " "))
                     kwargs[key] = value

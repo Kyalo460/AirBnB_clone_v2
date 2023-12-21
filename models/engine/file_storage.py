@@ -21,7 +21,8 @@ class FileStorage:
         filtered_dict = {}
         if cls is not None:
             for key, value in FileStorage.__objects.items():
-                filtered_dict.update({key: value})
+                if cls is type(value):
+                    filtered_dict.update({key: value})
             return filtered_dict
 
         return FileStorage.__objects

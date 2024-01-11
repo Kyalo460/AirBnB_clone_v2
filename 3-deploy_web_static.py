@@ -62,6 +62,5 @@ def do_deploy(archive_path):
     if run("sudo ln -s /data/web_static/releases/{}/ /data/web_static/current"
             .format(line)).failed:
         return False
-    run("sudo systemctl restart nginx")
 
     return True
